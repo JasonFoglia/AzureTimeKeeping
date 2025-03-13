@@ -5,12 +5,15 @@
     "description": "Displays Azure DevOps tickets and tracks time",
     "permissions": [
         "activeTab",
-        "storage",
         "identity",
-        "alarms"
+        "alarms",
+        "storage",
+        "cookies",
+        "webRequest"
     ],
     "host_permissions": [
-        "https://dev.azure.com/*"
+        "https://dev.azure.com/*",
+        "https://*.visualstudio.com/*"
     ],
     "action": {
         "default_popup": "popup.html",

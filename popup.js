@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Replace with your ADO organization, project, and PAT
     const org = 'your-org';
     const project = 'your-project';
-    const pat = 'your-personal-access-token';
     const apiUrl = `https://dev.azure.com/${org}/${project}/_apis/wit/wiql?api-version=7.0`;
 
     // WIQL query to get active work items (tickets)
@@ -16,11 +15,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
-                'Authorization': 'Basic ' + btoa(':' + pat),
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(query)
+            body: JSON.stringify(query),
+            credentials: 'include'
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const html = '<tag attribute="value=\"kjskdjsdkj\">';
+        const attributeValue = html.replace(/\battribute\s*=\s*\"?([^"]+?)}\b/, '$1');
+        console.log(attributeValue); // Output: kjskdjsdkj
 
         const data = await response.json();
         const workItemIds = data.workItems.map(item => item.id);
@@ -28,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Fetch detailed work item info
         const detailsUrl = `https://dev.azure.com/${org}/_apis/wit/workitems?ids=${workItemIds.join(',')}&api-version=7.0`;
         const detailsResponse = await fetch(detailsUrl, {
-            headers: { 'Authorization': 'Basic ' + btoa(':' + pat) }
+            credentials: 'include'
         });
         const tickets = await detailsResponse.json();
 
@@ -57,6 +64,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+/*
+document.addEventListener('DOMContentLoaded', () => {
+  const ticketList = document.getElementById('ticketList');
+  const org = 'your-org';
+  const project = 'your-project';
+
+  chrome.runtime.sendMessage({ type: 'fetchTickets', org, project }, (response) => {
+    if (response.error) {
+      ticketList.innerHTML = 'Error: ' + response.error;
+      return;
+    }
+
+    const tickets = response.tickets;
+    chrome.action.setBadgeText({ text: tickets.value.length.toString() });
+    chrome.action.setBadgeBackgroundColor({ color: '#FF0000' });
+
+    tickets.value.forEach(ticket => {
+      const div = document.createElement('div');
+      div.className = 'ticket';
+      div.innerHTML = `
+        <div class="ticket-title">${ticket.fields['System.Title']}</div>
+        <div>ID: ${ticket.id} | State: ${ticket.fields['System.State']}</div>
+        <div class="time-controls">
+          <button onclick="startTimer(${ticket.id})">Start</button>
+          <button onclick="stopTimer(${ticket.id})">Stop</button>
+          <span id="time-${ticket.id}">00:00</span>
+        </div>
+      `;
+      ticketList.appendChild(div);
+    });
+  });
+});
+
+ */
+
+
+
 // Time tracking functions (basic implementation)
 let timers = {};
 
@@ -83,3 +127,7 @@ function updateTime(ticketId) {
     const seconds = (elapsed % 60).toString().padStart(2, '0');
     document.getElementById(`time-${ticketId}`).textContent = `${minutes}:${seconds}`;
 }
+
+
+
+
